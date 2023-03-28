@@ -42,8 +42,9 @@ st.sidebar.write(f'Current selection: {query} -> {subreddit}')
 #cohere_api_key = params['cohere_api_key']
 
 if cohere_api_key == '':
-    st.error('Please enter your Cohere API key in the sidebar')
-
+    st.warning('Please enter your Cohere API key in the sidebar')
+elif query == '':
+    st.warning('Please enter a search query in the sidebar') 
 else:
     cohere_client = cohere.Client(api_key=cohere_api_key)
 
