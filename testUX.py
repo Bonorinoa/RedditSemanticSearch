@@ -7,7 +7,6 @@ import faiss
 import numpy as np
 from utils import authenticate, reddit_search
 
-
 # Load the saved Faiss index
 index = faiss.read_index('faiss_index.idx')
 
