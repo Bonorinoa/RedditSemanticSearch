@@ -41,59 +41,63 @@ st.sidebar.write(f'Current selection: {query} -> {subreddit}')
 ## MAIN BODY ##
 #cohere_api_key = params['cohere_api_key']
 
-cohere_client = cohere.Client(api_key=cohere_api_key)
+if cohere_api_key == '':
+    st.error('Please enter your Cohere API key in the sidebar')
 
-# Get the query's embedding
-query_embed = cohere_client.embed(texts=[query], model="large").embeddings
+else:
+    cohere_client = cohere.Client(api_key=cohere_api_key)
 
-# Convert the query_embed to a float32 NumPy array and normalize it
-query_embed_np = np.array(query_embed).astype('float32')
-faiss.normalize_L2(query_embed_np)
+    # Get the query's embedding
+    query_embed = cohere_client.embed(texts=[query], model="large").embeddings
 
-# Retrieve the nearest neighbors
-D, I = index.search(query_embed_np, 5)
+    # Convert the query_embed to a float32 NumPy array and normalize it
+    query_embed_np = np.array(query_embed).astype('float32')
+    faiss.normalize_L2(query_embed_np)
 
-# Format the results
-results = pd.DataFrame(data={'PostID': [id_to_post[i]['Posts']['PostID'] for i in I[0]], 
-                             'PostTitle': [id_to_post[i]['Posts']['PostTitle'] for i in I[0]], 
-                             'distance': D[0]})
+    # Retrieve the nearest neighbors
+    D, I = index.search(query_embed_np, 5)
 
-print(f"Query: '{query}'\nNearest neighbors:")
-print(results)
+    # Format the results
+    results = pd.DataFrame(data={'PostID': [id_to_post[i]['Posts']['PostID'] for i in I[0]], 
+                                'PostTitle': [id_to_post[i]['Posts']['PostTitle'] for i in I[0]], 
+                                'distance': D[0]})
 
-resultsComments = [{"PostID":db_json['Posts'][i]['PostID'], "PostComments":db_json['Posts'][i]['PostComments']} for i in range(len(db_json['Posts'])) if db_json['Posts'][i]['PostID'] in list(results.PostID)]
-len(resultsComments)
+    print(f"Query: '{query}'\nNearest neighbors:")
+    print(results)
 
-resultsCommentsdf = pd.DataFrame(resultsComments)
-merged = results.merge(resultsCommentsdf, left_on='PostID', right_on='PostID')
+    resultsComments = [{"PostID":db_json['Posts'][i]['PostID'], "PostComments":db_json['Posts'][i]['PostComments']} for i in range(len(db_json['Posts'])) if db_json['Posts'][i]['PostID'] in list(results.PostID)]
+    len(resultsComments)
 
-# they all start with the same comment becauase it is the moderation comment from the particular subreddit
-semantic_search = [results['PostTitle'][i] for i in range(len(results['PostTitle']))]
+    resultsCommentsdf = pd.DataFrame(resultsComments)
+    merged = results.merge(resultsCommentsdf, left_on='PostID', right_on='PostID')
 
-
-# get subreddit of interest(s) (will be user input once interface is up)
-reddit_search = reddit_search(reddit, 
-                              'economics', 
-                              query
-                              )
-
-with st.expander("Top 5 Reddit Posts"):
-    st.header('Top 5 Reddit Posts')
-
-    top5_reddit = reddit_search.iloc[0:5]
-
-    for i, post in enumerate(top5_reddit['Posts']):
-        st.markdown(f'### {post}')
-        st.write(top5_reddit['Comments'][i])
+    # they all start with the same comment becauase it is the moderation comment from the particular subreddit
+    semantic_search = [results['PostTitle'][i] for i in range(len(results['PostTitle']))]
 
 
-with st.expander("Top 5 Semantic Search Posts"):
-    st.header('Top 5 Semantic Search Posts')
+    # get subreddit of interest(s) (will be user input once interface is up)
+    reddit_search = reddit_search(reddit, 
+                                'economics', 
+                                query
+                                )
 
-    top5_semantic = merged[:5]
+    with st.expander("Top 5 Reddit Posts"):
+        st.header('Top 5 Reddit Posts')
 
-    for i, post in enumerate(top5_semantic['PostTitle']):
-        st.markdown(f'### {post}')
-        st.write(top5_semantic['PostComments'][i])
+        top5_reddit = reddit_search.iloc[0:5]
+
+        for i, post in enumerate(top5_reddit['Posts']):
+            st.markdown(f'### {post}')
+            st.write(top5_reddit['Comments'][i])
+
+
+    with st.expander("Top 5 Semantic Search Posts"):
+        st.header('Top 5 Semantic Search Posts')
+
+        top5_semantic = merged[:5]
+
+        for i, post in enumerate(top5_semantic['PostTitle']):
+            st.markdown(f'### {post}')
+            st.write(top5_semantic['PostComments'][i])
 
 
