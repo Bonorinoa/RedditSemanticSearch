@@ -55,7 +55,7 @@ def semantic_search(query_embed, index, db_json):
     # Mapping between unique indices and original post information
     id_to_post = {i: post for i, post in enumerate(pd.DataFrame(db_json).to_dict('records'))}
     
-    # Retrieve the nearest neighbors
+    # Retrieve top 5 most similar indexed embeddings (D is distance and I is index)
     D, I = index.search(query_embed, 5)
 
     # Format the results
