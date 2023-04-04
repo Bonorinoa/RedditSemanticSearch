@@ -49,7 +49,7 @@ else:
     # semantic search
     semantic_search, semantic_comments = semantic_search(query_embed, index, db_json)
 
-    # get subreddit of interest(s) (will be user input once interface is up)
+    # keyword reddit search
     reddit_search = reddit_search(reddit, 
                                 'economics', 
                                 query
